@@ -2,6 +2,7 @@
 #define VM_VM_H
 #include <stdbool.h>
 #include "threads/palloc.h"
+#include "kernel/hash.h"
 
 enum vm_type {
 	/* page not initialized */
@@ -81,11 +82,28 @@ struct page_operations {
 #define destroy(page) \
 	if ((page)->operations->destroy) (page)->operations->destroy (page)
 
+enum locate {
+	FRAME = 0,
+	DISK = 1,
+	SWAP = 2
+};
+
 /* Representation of current process's memory space.
  * We don't want to force you to obey any specific design for this struct.
  * All designs up to you for this. */
+/* 현재 프로세스의 메모리 공간을 나타냅니다.
+ * 우리는 당신에게 이 구조에 대한 어떤 특정한 설계도를 따르도록 강요하고 싶지 않습니다.
+ * 이것에 대한 모든 설계는 당신에게 달려있습니다. */
 struct supplemental_page_table {
+	struct hash* spt_hash_table;
 };
+
+struct spt_entry {
+	struct hash_elem hash_elem;
+	enum locate curr_locate;
+	void* kva;
+	bool active;
+}
 
 #include "threads/thread.h"
 void supplemental_page_table_init (struct supplemental_page_table *spt);

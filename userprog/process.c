@@ -250,9 +250,7 @@ int process_exec(void *f_name)
 	process_cleanup();
 
 	/* And then load the binary */
-	printf("load start\n");
 	success = load(file_name, &_if);
-	printf("load end\n");
 	// hex_dump(_if.rsp, _if.rsp, USER_STACK - _if.rsp, true);
 
 	/* If load failed, quit. */
@@ -682,6 +680,7 @@ load_segment(struct file *file, off_t ofs, uint8_t *upage,
 }
 
 /* Create a minimal stack by mapping a zeroed page at the USER_STACK */
+/* USER_STACK에서 0으로 초기화된 페이지를 매핑하여 최소 스택 생성 */
 static bool
 setup_stack(struct intr_frame *if_)
 {
@@ -710,6 +709,15 @@ setup_stack(struct intr_frame *if_)
  * with palloc_get_page().
  * Returns true on success, false if UPAGE is already mapped or
  * if memory allocation fails. */
+/* 사용자 가상 주소 UPAGE에서 커널 가상 주소 KPAGE로의
+ * 매핑을 페이지 테이블에 추가합니다.
+ * 쓰기 기능이 가능하면 사용자 프로세스가 페이지를 수정할 수 있습니다.
+ * 그렇지 않으면 읽기 전용입니다.
+ * UPAGE가 아직 매핑되지 않아야 합니다.
+ * KPAGE는 아마도 palloc_get_page()를 가진 사용자 풀에서
+ * 얻은 페이지일 것이다.
+ * 성공 시 true를 반환하고, UPAGE가 이미 매핑되었거나
+ * 메모리 할당이 실패한 경우 false를 반환합니다. */
 static bool
 install_page(void *upage, void *kpage, bool writable)
 {
@@ -717,6 +725,8 @@ install_page(void *upage, void *kpage, bool writable)
 
 	/* Verify that there's not already a page at that virtual
 	 * address, then map our page there. */
+	/* 해당 가상 주소에 아직 페이지가 없는지 확인한 다음
+	 * 해당 페이지를 매핑합니다. */
 	return (pml4_get_page(t->pml4, upage) == NULL && pml4_set_page(t->pml4, upage, kpage, writable));
 }
 #else
@@ -777,7 +787,7 @@ load_segment(struct file *file, off_t ofs, uint8_t *upage,
 }
 
 /* Create a PAGE of stack at the USER_STACK. Return true on success. */
-/* Create a PAGE of stack at the USER_STACK. Return true on success. */
+/* USER_STACK에 스택 페이지를 생성합니다. 성공하면 true를 반환합니다. */
 static bool
 setup_stack(struct intr_frame *if_)
 {
@@ -787,6 +797,9 @@ setup_stack(struct intr_frame *if_)
 	/* TODO: Map the stack on stack_bottom and claim the page immediately.
 	 * TODO: If success, set the rsp accordingly.
 	 * TODO: You should mark the page is stack. */
+	/* TODO: 스택을 stack_bottom에 매핑하고 페이지를 즉시 할당합니다.
+	 * TODO: 성공하면 rsp를 적절하게 설정합니다.
+	 * TODO: 페이지를 스택으로 표시해야 합니다. */
 	/* TODO: Your code goes here */
 
 	return success;

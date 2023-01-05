@@ -38,10 +38,15 @@ page_get_type(struct page *page)
 static struct frame *vm_get_victim(void);
 static bool vm_do_claim_page(struct page *page);
 static struct frame *vm_evict_frame(void);
+unsigned spt_entry_hash(const struct hash_elem *p_, void *aux UNUSED);
+bool spt_entry_less(const struct hash_elem *a_, const struct hash_elem *b_, void *aux UNUSED);
 
 /* Create the pending page object with initializer. If you want to create a
  * page, do not create it directly and make it through this function or
  * `vm_alloc_page`. */
+/* Initializer를 사용하여 보류 중인 페이지 개체를 만듭니다.
+ * 페이지를 생성하려면 직접 생성하지 말고 이 함수 또는
+ * `vm_alloc_page`를 통해 생성하십시오. */
 bool vm_alloc_page_with_initializer(enum vm_type type, void *upage, bool writable,
 									vm_initializer *init, void *aux)
 {
@@ -185,8 +190,27 @@ vm_do_claim_page(struct page *page)
 
 /* Initialize new supplemental page table */
 /* 새 보조 페이지 테이블 초기화 */
-void supplemental_page_table_init(struct supplemental_page_table *spt UNUSED)
+void supplemental_page_table_init(struct supplemental_page_table *spt)
 {
+	struct hash *hash_table = malloc(sizeof(struct hash));
+	hash_init(spt->spt_hash_table, spt_entry_hash, spt_entry_less, NULL);
+	spt->spt_hash_table = hash_table;
+}
+
+unsigned
+spt_entry_hash(const struct hash_elem *p_, void *aux UNUSED)
+{
+	const struct spt_entry *p = hash_entry(p_, struct spt_entry, hash_elem);
+	return hash_bytes(&p->kva, sizeof p->kva);
+}
+
+bool spt_entry_less(const struct hash_elem *a_,
+					const struct hash_elem *b_, void *aux UNUSED)
+{
+	const struct spt_entry *a = hash_entry(a_, struct spt_entry, hash_elem);
+	const struct spt_entry *b = hash_entry(b_, struct spt_entry, hash_elem);
+
+	return a->kva < b->kva;
 }
 
 /* Copy supplemental page table from src to dst */
