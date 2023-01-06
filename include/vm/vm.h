@@ -25,6 +25,12 @@ enum vm_type {
 	VM_MARKER_END = (1 << 31),
 };
 
+enum locate {
+	FRAME = 0, // 프레임
+	DISK = 1, // 디스크
+	SWAP = 2 // 스왑 공간
+};
+
 #include "vm/uninit.h"
 #include "vm/anon.h"
 #include "vm/file.h"
@@ -41,15 +47,25 @@ struct thread;
  * This is kind of "parent class", which has four "child class"es, which are
  * uninit_page, file_page, anon_page, and page cache (project4).
  * DO NOT REMOVE/MODIFY PREDEFINED MEMBER OF THIS STRUCTURE. */
+/* "page"를 나타냅니다.
+ * 이것은 "부모 클래스"의 일종으로 uninit_page, file_page, anon_page,
+ * and page cache (project4)네 개의 "자녀 클래스"를 가지고 있다.
+ * 이 구조체의 미리 정의된 멤버를 제거하거나 수정하지 마십시오. */
 struct page {
 	const struct page_operations *operations;
-	void *va;              /* Address in terms of user space */
-	struct frame *frame;   /* Back reference for frame */
+	void *va;              /* Address in terms of user space */ // 사용자 공간 측면의 주소
+	struct frame *frame;   /* Back reference for frame */ // 프레임에 대한 역참조
 
 	/* Your implementation */
+	struct hash_elem hash_elem; // 해시 요소
+	bool active; // 활성화 체크
+	enum locate locate; // page 위치
+	void *kva; // kernel virtual address
 
 	/* Per-type data are binded into the union.
 	 * Each function automatically detects the current union */
+	/* 유형별 데이터가 유니온에 바인딩됩니다.
+	 * 각 함수는 현재 유니온을 자동으로 감지합니다. */
 	union {
 		struct uninit_page uninit;
 		struct anon_page anon;
@@ -82,12 +98,6 @@ struct page_operations {
 #define destroy(page) \
 	if ((page)->operations->destroy) (page)->operations->destroy (page)
 
-enum locate {
-	FRAME = 0,
-	DISK = 1,
-	SWAP = 2
-};
-
 /* Representation of current process's memory space.
  * We don't want to force you to obey any specific design for this struct.
  * All designs up to you for this. */
@@ -97,13 +107,6 @@ enum locate {
 struct supplemental_page_table {
 	struct hash* spt_hash_table;
 };
-
-struct spt_entry {
-	struct hash_elem hash_elem;
-	enum locate curr_locate;
-	void* kva;
-	bool active;
-}
 
 #include "threads/thread.h"
 void supplemental_page_table_init (struct supplemental_page_table *spt);

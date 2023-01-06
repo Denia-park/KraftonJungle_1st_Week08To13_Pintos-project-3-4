@@ -76,6 +76,9 @@ spt_find_page(struct supplemental_page_table *spt UNUSED, void *va UNUSED)
 	struct page *page = NULL;
 	/* TODO: Fill this function. */
 
+	/* Searches hash for an element equal to element. Returns the element found, if any, or a null pointer otherwise. */
+	/* 요소와 동일한 요소를 해시로 검색합니다. 발견된 요소(있는 경우)를 반환하거나 그렇지 않으면 NULL을 반환합니다. */
+	// struct hash_elem *hash_find(struct hash * hash, struct hash elem * element);
 	return page;
 }
 
@@ -197,18 +200,21 @@ void supplemental_page_table_init(struct supplemental_page_table *spt)
 	spt->spt_hash_table = hash_table;
 }
 
+/* 페이지 p에 대한 해시 값을 반환합니다. */
 unsigned
 spt_entry_hash(const struct hash_elem *p_, void *aux UNUSED)
 {
-	const struct spt_entry *p = hash_entry(p_, struct spt_entry, hash_elem);
+	const struct page *p = hash_entry(p_, struct page, hash_elem);
+	// buf에서 시작하는 크기 바이트의 해시를 반환
 	return hash_bytes(&p->kva, sizeof p->kva);
 }
 
+/* 요소 a와 b의 저장된 kva 멤버(키)를 비교하는 함수 */
 bool spt_entry_less(const struct hash_elem *a_,
 					const struct hash_elem *b_, void *aux UNUSED)
 {
-	const struct spt_entry *a = hash_entry(a_, struct spt_entry, hash_elem);
-	const struct spt_entry *b = hash_entry(b_, struct spt_entry, hash_elem);
+	const struct page *a = hash_entry(a_, struct page, hash_elem);
+	const struct page *b = hash_entry(b_, struct page, hash_elem);
 
 	return a->kva < b->kva;
 }
