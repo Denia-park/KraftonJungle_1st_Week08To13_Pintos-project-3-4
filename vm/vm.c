@@ -75,11 +75,23 @@ spt_find_page(struct supplemental_page_table *spt UNUSED, void *va UNUSED)
 {
 	struct page *page = NULL;
 	/* TODO: Fill this function. */
+	struct hash_elem *e;
 
+	// TODO : 추후에 다시 한번 확인해보기.
+	page->va = va;
+	e = hash_find(&spt->spt_hash_table, &page->hash_elem);
+
+	if (e == NULL)
+	{
+		return NULL;
+	}
+	else
+	{
+		return hash_entry(e, struct page, hash_elem);
+	}
 	/* Searches hash for an element equal to element. Returns the element found, if any, or a null pointer otherwise. */
 	/* 요소와 동일한 요소를 해시로 검색합니다. 발견된 요소(있는 경우)를 반환하거나 그렇지 않으면 NULL을 반환합니다. */
-	// struct hash_elem *hash_find(struct hash * hash, struct hash elem * element);
-	return page;
+	// return page;
 }
 
 /* Insert PAGE into spt with validation. */
@@ -87,10 +99,8 @@ spt_find_page(struct supplemental_page_table *spt UNUSED, void *va UNUSED)
 bool spt_insert_page(struct supplemental_page_table *spt UNUSED,
 					 struct page *page UNUSED)
 {
-	int succ = false;
 	/* TODO: Fill this function. */
-
-	return succ;
+	return hash_insert(spt->spt_hash_table, page) ? false : true;
 }
 
 void spt_remove_page(struct supplemental_page_table *spt, struct page *page)
@@ -206,17 +216,17 @@ spt_entry_hash(const struct hash_elem *p_, void *aux UNUSED)
 {
 	const struct page *p = hash_entry(p_, struct page, hash_elem);
 	// buf에서 시작하는 크기 바이트의 해시를 반환
-	return hash_bytes(&p->kva, sizeof p->kva);
+	return hash_bytes(&p->va, sizeof p->va);
 }
 
-/* 요소 a와 b의 저장된 kva 멤버(키)를 비교하는 함수 */
+/* 요소 a와 b의 저장된 va 멤버(키)를 비교하는 함수 */
 bool spt_entry_less(const struct hash_elem *a_,
 					const struct hash_elem *b_, void *aux UNUSED)
 {
 	const struct page *a = hash_entry(a_, struct page, hash_elem);
 	const struct page *b = hash_entry(b_, struct page, hash_elem);
 
-	return a->kva < b->kva;
+	return a->va < b->va;
 }
 
 /* Copy supplemental page table from src to dst */
