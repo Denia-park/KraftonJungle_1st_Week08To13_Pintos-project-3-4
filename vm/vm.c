@@ -73,22 +73,18 @@ err:
 struct page *
 spt_find_page(struct supplemental_page_table *spt UNUSED, void *va UNUSED)
 {
-	struct page *page = NULL;
+	struct page page;
 	/* TODO: Fill this function. */
 	struct hash_elem *e;
 
 	// TODO : 추후에 다시 한번 확인해보기.
-	page->va = va;
-	e = hash_find(&spt->spt_hash_table, &page->hash_elem);
+	page.va = va;
+	e = hash_find(spt->spt_hash_table, &page.hash_elem);
 
-	if (e == NULL)
-	{
-		return NULL;
-	}
-	else
-	{
-		return hash_entry(e, struct page, hash_elem);
-	}
+	if (e == NULL) return NULL;
+
+	return hash_entry(e, struct page, hash_elem);
+
 	/* Searches hash for an element equal to element. Returns the element found, if any, or a null pointer otherwise. */
 	/* 요소와 동일한 요소를 해시로 검색합니다. 발견된 요소(있는 경우)를 반환하거나 그렇지 않으면 NULL을 반환합니다. */
 	// return page;
