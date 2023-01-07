@@ -96,7 +96,7 @@ bool spt_insert_page(struct supplemental_page_table *spt UNUSED,
 					 struct page *page UNUSED)
 {
 	/* TODO: Fill this function. */
-	return hash_insert(spt->spt_hash_table, page) ? false : true;
+	return hash_insert(spt->spt_hash_table, &page->hash_elem) ? false : true;
 }
 
 void spt_remove_page(struct supplemental_page_table *spt, struct page *page)
