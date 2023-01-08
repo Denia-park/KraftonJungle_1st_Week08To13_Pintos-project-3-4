@@ -80,6 +80,8 @@ struct page {
 struct frame {
 	void *kva;
 	struct page *page;
+	bool accessed;
+	bool dirty;
 };
 
 /* The function table for page operations.

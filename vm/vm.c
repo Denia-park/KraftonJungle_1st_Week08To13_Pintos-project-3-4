@@ -41,6 +41,7 @@ static bool vm_do_claim_page (struct page *page);
 static struct frame *vm_evict_frame (void);
 unsigned spt_entry_hash (const struct hash_elem *p_, void *aux UNUSED);
 bool spt_entry_less (const struct hash_elem *a_, const struct hash_elem *b_, void *aux UNUSED);
+static void init_frame(struct frame *frame, const void *addr);
 
 /* Create the pending page object with initializer. If you want to create a
  * page, do not create it directly and make it through this function or
@@ -140,13 +141,28 @@ vm_evict_frame (void)
   * 메모리 공간을 얻기 위해 프레임을 제거합니다. */
 static struct frame *
 vm_get_frame (void)
-{
-	struct frame *frame = NULL;
+{	
 	/* TODO: Fill this function. */
+	struct frame *frame = malloc(sizeof(struct frame));
+	void *addr = palloc_get_page(PAL_USER);
+	
+	if (!addr) {
+		PANIC ("todo");
+	}
 
+	init_frame(frame, addr);
+ 
 	ASSERT (frame != NULL);
 	ASSERT (frame->page == NULL);
 	return frame;
+}
+
+static void
+init_frame(struct frame *frame, const void *addr){
+	frame->kva = addr;
+	frame->page = NULL;
+	frame->accessed = false;
+	frame->dirty = false;
 }
 
 /* Growing the stack. */
