@@ -60,7 +60,7 @@ struct page {
 	struct hash_elem hash_elem; // 해시 요소
 	bool active; // 활성화 체크
 	enum locate locate; // page 위치
-	void *kva; // kernel virtual address
+	bool writable;
 
 	/* Per-type data are binded into the union.
 	 * Each function automatically detects the current union */

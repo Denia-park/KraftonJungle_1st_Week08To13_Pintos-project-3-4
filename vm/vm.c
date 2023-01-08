@@ -3,6 +3,7 @@
 #include "threads/malloc.h"
 #include "vm/vm.h"
 #include "vm/inspect.h"
+#include "threads/mmu.h"
 
 /* Initializes the virtual memory subsystem by invoking each subsystem's
  * intialize codes. */
@@ -182,16 +183,22 @@ void vm_dealloc_page (struct page *page)
 
 /* Claim the page that allocate on VA. */
 /* VA에 할당된 페이지를 할당합니다. */
-bool vm_claim_page (void *va UNUSED)
+bool vm_claim_page (void *va)
 {
 	struct page *page = NULL;
 	/* TODO: Fill this function */
-	struct thread *curr_thread = thread_current ();
+	page = spt_find_page (&thread_current ()->spt, va);
 
-	page = spt_find_page (&curr_thread->spt, va);
+	// ? 만약에 spt_find_page의 값이 NULL일 경우 추가적인 처리가 필요할까?
+	// ? 즉, 단순히 false만 반환하면 되는 것인지, 아니면 페이지를 새로 생성해야 하는 것인지 고민
 
+	// ? 만약 페이지를 새로 생성해야 한다면 다음과 같이 분기 처리를 해주려고 했음. 그런데..
 	if (!page) {
-		return false;
+		page = malloc(sizeof(struct page));
+		// TODO:
+		// ! vm_alloc_page_with_initializer()의 경우 vm_type을 지정할 수 없고,
+		// ! uninit_new()의 경우 vm_initializer의 값으로 무엇을 넘겨줘야 할지 아직 알 수 없으므로 보류
+		// uninit_new(page, va);
 	}
 
 	return vm_do_claim_page (page);
@@ -203,6 +210,7 @@ static bool
 vm_do_claim_page (struct page *page)
 {
 	struct frame *frame = vm_get_frame ();
+	struct thread *curr_thread = thread_current();
 
 	/* Set links */
 	frame->page = page;
@@ -210,6 +218,8 @@ vm_do_claim_page (struct page *page)
 
 	/* TODO: Insert page table entry to map page's VA to frame's PA. */
 	/* TODO: 페이지 테이블 항목을 삽입하여 페이지의 VA를 프레임의 PA에 매핑합니다. */
+	// ? rw 인자로 어떤 값을 줘야 할까? 닭이 먼저냐 달걀이 먼저냐;; (임시로 false를 전달함.)
+	pml4_set_page(curr_thread->pml4, page->va, frame->kva, false);
 
 	return swap_in (page, frame->kva);
 }
