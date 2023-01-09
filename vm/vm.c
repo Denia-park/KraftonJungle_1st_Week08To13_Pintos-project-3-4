@@ -80,6 +80,7 @@ bool vm_alloc_page_with_initializer (enum vm_type type, void *upage, bool writab
 		}
 
 		uninit_new(uninit, upage, init, type, aux, type_initializer);
+		uninit->writable = writable;
 
 		  /* TODO: Insert the page into the spt. */
 		  /* TODO: 페이지를 SPT에 삽입합니다. */
