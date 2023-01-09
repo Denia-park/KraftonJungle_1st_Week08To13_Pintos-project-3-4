@@ -4,6 +4,9 @@
 #include "vm/vm.h"
 #include "vm/inspect.h"
 #include "threads/mmu.h"
+#include "vm/uninit.h"
+#include "vm/anon.h"
+#include "vm/file.h"
 
 /* Initializes the virtual memory subsystem by invoking each subsystem's
  * intialize codes. */
@@ -55,7 +58,8 @@ bool vm_alloc_page_with_initializer (enum vm_type type, void *upage, bool writab
 
 	ASSERT (VM_TYPE (type) != VM_UNINIT)
 
-		struct supplemental_page_table *spt = &thread_current ()->spt;
+	struct supplemental_page_table *spt = &thread_current ()->spt;
+	struct page *uninit = malloc(sizeof(struct page));
 
 	/* Check wheter the upage is already occupied or not. */
 	/* upage가 이미 사용 중인지 확인합니다. */
@@ -66,9 +70,25 @@ bool vm_alloc_page_with_initializer (enum vm_type type, void *upage, bool writab
 		 /* TODO: 페이지를 생성하고 VM 유형에 따라 이니셜라이저를 가져온 다음,
 		  * TODO: uninit_new를 호출하여 "uninit" 페이지 구조를 생성합니다.
 		  * TODO: uninit_new를 호출한 후 필드를 수정해야 합니다. */
+		
+		bool (*type_initializer)(struct page *, enum vm_type, void *) = NULL;
+
+		if (type == VM_ANON) {
+			type_initializer = anon_initializer;
+		} else if (type == VM_FILE) {
+			type_initializer = file_backed_initializer;
+		}
+
+		uninit_new(uninit, upage, init, type, aux, type_initializer);
 
 		  /* TODO: Insert the page into the spt. */
 		  /* TODO: 페이지를 SPT에 삽입합니다. */
+		  //기분이 좋으면 괄호 있음 ㅎㅎ. (?)
+		if (!spt_insert_page(spt, uninit)) {
+			goto err;
+		}
+
+		return true;
 	}
 err:
 	return false;
@@ -218,7 +238,6 @@ static bool
 vm_do_claim_page (struct page *page)
 {
 	struct frame *frame = vm_get_frame ();
-	struct thread *curr_thread = thread_current();
 
 	/* Set links */
 	frame->page = page;
@@ -226,7 +245,7 @@ vm_do_claim_page (struct page *page)
 
 	/* TODO: Insert page table entry to map page's VA to frame's PA. */
 	/* TODO: 페이지 테이블 항목을 삽입하여 페이지의 VA를 프레임의 PA에 매핑합니다. */
-	pml4_set_page(curr_thread->pml4, page->va, frame->kva, page->writable);
+	pml4_set_page(thread_current()->pml4, page->va, frame->kva, page->writable);
 
 	return swap_in (page, frame->kva);
 }
