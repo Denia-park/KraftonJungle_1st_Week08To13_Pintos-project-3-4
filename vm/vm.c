@@ -111,7 +111,7 @@ struct page *
 	struct hash_elem *e;
 
 	// TODO : 추후에 다시 한번 확인해보기.
-	page.va = va;
+	page.va = pg_round_down(va);
 	e = hash_find (spt->spt_hash_table, &page.hash_elem);
 
 	if (e == NULL) return NULL;
