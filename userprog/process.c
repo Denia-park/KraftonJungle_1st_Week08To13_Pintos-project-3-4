@@ -876,7 +876,7 @@ setup_stack(struct intr_frame *if_)
 	 * TODO: 페이지를 스택으로 표시해야 합니다. */
 	/* TODO: Your code goes here */
 	void *aux = if_;
-	vm_alloc_page_with_initializer(VM_ANON | VM_MARKER_STACK, stack_bottom, true, init_stack, &aux);
+	success = vm_alloc_page_with_initializer(VM_ANON | VM_MARKER_STACK, stack_bottom, true, init_stack, aux);
 
 	return success;
 }
