@@ -73,9 +73,9 @@ bool vm_alloc_page_with_initializer (enum vm_type type, void *upage, bool writab
 		
 		bool (*type_initializer)(struct page *, enum vm_type, void *) = NULL;
 
-		if (type == VM_ANON) {
+		if (VM_TYPE (type) == VM_ANON) {
 			type_initializer = anon_initializer;
-		} else if (type == VM_FILE) {
+		} else if (VM_TYPE (type) == VM_FILE) {
 			type_initializer = file_backed_initializer;
 		}
 
@@ -87,6 +87,12 @@ bool vm_alloc_page_with_initializer (enum vm_type type, void *upage, bool writab
 		  //기분이 좋으면 괄호 있음 ㅎㅎ. (?)
 		if (!spt_insert_page(spt, uninit)) {
 			goto err;
+		}
+
+		if(type & VM_MARKER_STACK){
+			if (!vm_claim_page(upage)) {
+				goto err;
+			}
 		}
 
 		return true;

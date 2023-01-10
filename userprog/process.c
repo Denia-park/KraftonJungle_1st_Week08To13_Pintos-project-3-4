@@ -852,6 +852,14 @@ load_segment(struct file *file, off_t ofs, uint8_t *upage,
 	return true;
 }
 
+//stack 초기화, 
+static bool
+init_stack(struct page *page, void *aux){
+	struct intr_frame *if_ = aux;
+
+	if_->rsp = USER_STACK;
+}
+
 /* Create a PAGE of stack at the USER_STACK. Return true on success. */
 /* USER_STACK에 스택 페이지를 생성합니다. 성공하면 true를 반환합니다. */
 static bool
@@ -867,6 +875,8 @@ setup_stack(struct intr_frame *if_)
 	 * TODO: 성공하면 rsp를 적절하게 설정합니다.
 	 * TODO: 페이지를 스택으로 표시해야 합니다. */
 	/* TODO: Your code goes here */
+	void *aux = if_;
+	vm_alloc_page_with_initializer(VM_ANON | VM_MARKER_STACK, stack_bottom, true, init_stack, &aux);
 
 	return success;
 }
