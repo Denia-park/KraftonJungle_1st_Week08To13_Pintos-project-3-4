@@ -222,6 +222,8 @@ bool vm_try_handle_fault (struct intr_frame *f UNUSED, void *addr UNUSED,
 
 	//적절한 PAGE를 찾아서 do_clam_page로 넘겨야 함.
 	page = spt_find_page(spt, addr);
+	if(page == NULL)
+		return false;
 
 	return vm_do_claim_page (page);
 }
