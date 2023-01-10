@@ -857,7 +857,7 @@ static bool
 init_stack(struct page *page, void *aux){
 	struct intr_frame *if_ = aux;
 
-	if_->rsp = (void *)(((uint8_t *)USER_STACK) - PGSIZE);
+	if_->rsp = USER_STACK;
 }
 
 /* Create a PAGE of stack at the USER_STACK. Return true on success. */
