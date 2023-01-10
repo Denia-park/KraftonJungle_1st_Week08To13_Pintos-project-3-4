@@ -213,6 +213,16 @@ bool vm_try_handle_fault (struct intr_frame *f UNUSED, void *addr UNUSED,
 	/* TODO: Validate the fault */
 	/* TODO: Your code goes here */
 
+	//page_fault 에서 해당 내용을 처리하므로 아직은 내용 처리 보류
+	// which first checks if it is a valid page fault.
+	// By valid, we mean the fault that accesses invalid.
+	// If it is a bogus fault, you load some contents into the page and
+	// return control to the user program.
+
+
+	//적절한 PAGE를 찾아서 do_clam_page로 넘겨야 함.
+	page = spt_find_page(spt, addr);
+
 	return vm_do_claim_page (page);
 }
 
