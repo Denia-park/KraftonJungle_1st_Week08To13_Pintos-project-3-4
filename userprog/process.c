@@ -773,8 +773,12 @@ lazy_load_segment(struct page *page, void *aux)
 	struct lazy_load_aux *lazy_load_aux = (struct lazy_load_aux *)aux;
 	void *kpage = page->frame->kva;
 	size_t page_read_bytes = lazy_load_aux->page_read_bytes;
+	struct file * load_file = lazy_load_aux->file;
+	off_t load_oft = lazy_load_aux->ofs;
 
-	if (file_read(lazy_load_aux->file, kpage, page_read_bytes) != (int)page_read_bytes) {
+	file_seek(load_file,load_oft);
+
+	if (file_read(load_file, kpage, page_read_bytes) != (int)page_read_bytes) {
 		// FIXME: kpage 반환 필요?
 		// spt_kill 참고
 		return false;
@@ -818,7 +822,6 @@ load_segment(struct file *file, off_t ofs, uint8_t *upage,
 	ASSERT(pg_ofs(upage) == 0);
 	ASSERT(ofs % PGSIZE == 0);
 
-	// ? file_seek 필요없는지?
 	while (read_bytes > 0 || zero_bytes > 0)
 	{
 		/* Do calculate how to fill this page.
