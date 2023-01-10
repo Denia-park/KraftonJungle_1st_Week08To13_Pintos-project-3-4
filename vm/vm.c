@@ -272,8 +272,9 @@ vm_do_claim_page (struct page *page)
 void supplemental_page_table_init (struct supplemental_page_table *spt)
 {
 	struct hash *hash_table = malloc (sizeof (struct hash));
-	hash_init (spt->spt_hash_table, spt_entry_hash, spt_entry_less, NULL);
+	//! 순서 변경 필요함
 	spt->spt_hash_table = hash_table;
+	hash_init (spt->spt_hash_table, spt_entry_hash, spt_entry_less, NULL);
 }
 
 /* 페이지 p에 대한 해시 값을 반환합니다. */
