@@ -1,11 +1,11 @@
 #include "userprog/exception.h"
 #include <inttypes.h>
 #include <stdio.h>
+#include "lib/user/syscall.h"
 #include "userprog/gdt.h"
 #include "threads/interrupt.h"
 #include "threads/thread.h"
 #include "intrinsic.h"
-#include "userprog/syscall.h"
 
 /* Number of page faults processed. */
 static long long page_fault_cnt;
