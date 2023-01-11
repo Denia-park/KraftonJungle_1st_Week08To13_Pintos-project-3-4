@@ -148,14 +148,8 @@ check_address(void *addr) {
 	//		<유효하지 않은 포인터>
 	//		- 널 포인터
 	//		- virtual memory와 매핑 안 된 영역
-	//		- 커널 가상 메모리 주소 공간을 가리키는 포인터 (=PHYS_BASE 위의 영역)
-	if (
-		!addr
-		|| is_kernel_vaddr(addr)
-		|| !pml4_get_page(thread_current()->pml4, addr)
-	) {
+	if (addr == NULL || is_kernel_vaddr(addr)) {
 		// 2. 유저 영역을 벗어난 영역일 경우 프로세스 종료((exit(-1)))
-		printf("check_address");
 		exit(-1);
 	}
 }
