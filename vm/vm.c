@@ -8,6 +8,7 @@
 #include "vm/anon.h"
 #include "vm/file.h"
 #include "hash.h"
+#include <string.h>
 
 /* Initializes the virtual memory subsystem by invoking each subsystem's
  * intialize codes. */
@@ -316,9 +317,14 @@ bool supplemental_page_table_copy (struct supplemental_page_table *dst UNUSED,
 	hash_first (&i, src_ht);
 	while (hash_next (&i)) {
 		struct page *spt_page = hash_entry (hash_cur (&i), struct page, hash_elem);
+
+		// "안예인" 작성 - 23년 1월 12일 AM 12시 44분 -> 틀리면 모두 "안예인" 탓 (지분 PGSIZE)
+		// ★ 성공하면 우리 예인님 ^오^ ★ 꿈은 이루어 진다!! (지분 PGSIZE)
+		void * copy_aux = palloc_get_page(PAL_ZERO);
 		
-		//do Something;
-		//init을 어떻게 할지 고민해야함.
+		memcpy(copy_aux, spt_page->aux, PGSIZE);
+
+		// check: aux를 malloc을 해줘야 할까 ?
 		vm_alloc_page_with_initializer(spt_page->operations->type, spt_page->va, spt_page->writable, spt_page->init, spt_page->aux);
 		if(spt_page->frame->kva != NULL){
 			vm_do_claim_page(spt_page); // 브리기태임 굿 ! 영화 무비 공부 스터디 (4조 이름)
