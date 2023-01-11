@@ -2,6 +2,7 @@
 #include "userprog/process.h"
 #include <stdio.h>
 #include <syscall-nr.h>
+#include "lib/string.h"
 #include "threads/interrupt.h"
 #include "threads/thread.h"
 #include "threads/loader.h"
@@ -12,6 +13,7 @@
 #include "filesys/filesys.h"
 #include "filesys/file.h"
 #include "threads/palloc.h"
+#include "devices/input.h"
 
 typedef int pid_t;
 
@@ -65,9 +67,6 @@ syscall_init (void) {
 /* The main system call interface */
 void
 syscall_handler (struct intr_frame *f) {
-	/* 포인터 유효성 검증 */
-	struct thread *curr_thread = thread_current();
-	
 	switch (f->R.rax)
 	{
 	case SYS_HALT:
@@ -83,30 +82,30 @@ syscall_handler (struct intr_frame *f) {
 		break;
 
 	case SYS_FORK:
-		check_address(f->R.rdi);
+		check_address((void *) f->R.rdi);
 		intr_frame_cpy(f);
-		f->R.rax = fork(f->R.rdi);
+		f->R.rax = fork((const char *) f->R.rdi);
 		break;
 
 	case SYS_EXEC:
-		check_address(f->R.rdi);
-		f->R.rax = exec(f->R.rdi);
+		check_address((void *) f->R.rdi);
+		f->R.rax = exec((const char *) f->R.rdi);
 		
 		break;
 
 	case SYS_CREATE:
-		check_address(f->R.rdi);
-		f->R.rax = create(f->R.rdi, f->R.rsi);
+		check_address((void *) f->R.rdi);
+		f->R.rax = create((const char *) f->R.rdi, f->R.rsi);
 		break;
 
 	case SYS_REMOVE:
-		check_address(f->R.rdi);
-		f->R.rax = remove(f->R.rdi);
+		check_address((void *) f->R.rdi);
+		f->R.rax = remove((const char *) f->R.rdi);
 		break;
 
 	case SYS_OPEN:
-		check_address(f->R.rdi);
-		f->R.rax = open(f->R.rdi);
+		check_address((void *) f->R.rdi);
+		f->R.rax = open((const char *) f->R.rdi);
 		break;
 
 	case SYS_FILESIZE:
@@ -114,15 +113,15 @@ syscall_handler (struct intr_frame *f) {
 		break;
 
 	case SYS_READ:
-		//check_address(f->R.rdi);
-		check_address(f->R.rsi);
-		f->R.rax = read(f->R.rdi, f->R.rsi, f->R.rdx);
+		//check_address((void *) f->R.rdi);
+		check_address((void *) f->R.rsi);
+		f->R.rax = read(f->R.rdi, (void *) f->R.rsi, f->R.rdx);
 		break;
 
 	case SYS_WRITE:
-		//check_address(f->R.rdi);
-		check_address(f->R.rsi);
-		f->R.rax = write(f->R.rdi, f->R.rsi, f->R.rdx);
+		//check_address((void *) f->R.rdi);
+		check_address((void *) f->R.rsi);
+		f->R.rax = write(f->R.rdi, (const void *) f->R.rsi, f->R.rdx);
 		break;
 
 	case SYS_SEEK:
@@ -156,6 +155,7 @@ check_address(void *addr) {
 		|| !pml4_get_page(thread_current()->pml4, addr)
 	) {
 		// 2. 유저 영역을 벗어난 영역일 경우 프로세스 종료((exit(-1)))
+		printf("check_address");
 		exit(-1);
 	}
 }
@@ -192,6 +192,9 @@ exec (const char *cmd_line) {
 	if (process_exec(cmd_line_cpy) == -1) {
 		exit(-1);
 	}
+
+	NOT_REACHED();
+	return 1;
 }
 
 int
@@ -248,7 +251,7 @@ read (int fd, void *buffer, unsigned size) {
 
 	if (fd == STDIN_FILENO)
 	{	
-		int i;
+		uint32_t i;
 		uint8_t key;
 		for (i=0; i<size; i++)
 		{
@@ -342,7 +345,7 @@ close (int fd) {// FIXME: next_fd 갱신 로직 최적화
 	{	
 		struct thread *curr = thread_current();
 		struct file *file_p = curr->fdt[fd];
-		if (!file_p == NULL)
+		if (file_p != NULL)
 		{
 			file_close(file_p);
 			curr->fdt[fd] = NULL;
