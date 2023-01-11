@@ -7,6 +7,7 @@
 #include "vm/uninit.h"
 #include "vm/anon.h"
 #include "vm/file.h"
+#include "hash.h"
 
 /* Initializes the virtual memory subsystem by invoking each subsystem's
  * intialize codes. */
@@ -81,6 +82,8 @@ bool vm_alloc_page_with_initializer (enum vm_type type, void *upage, bool writab
 
 		uninit_new(uninit, upage, init, type, aux, type_initializer);
 		uninit->writable = writable;
+		uninit->init = init;
+		uninit->aux = aux;
 
 		  /* TODO: Insert the page into the spt. */
 		  /* TODO: 페이지를 SPT에 삽입합니다. */
@@ -303,6 +306,24 @@ bool spt_entry_less (const struct hash_elem *a_,
 bool supplemental_page_table_copy (struct supplemental_page_table *dst UNUSED,
 	struct supplemental_page_table *src UNUSED)
 {
+	struct hash *src_ht = src->spt_hash_table;
+	struct hash *dst_ht = dst->spt_hash_table;
+
+	//You will need to allocate uninit page and claim them immediately.
+
+    //hash_table 순회
+	struct hash_iterator i;
+	hash_first (&i, src_ht);
+	while (hash_next (&i)) {
+		struct page *spt_page = hash_entry (hash_cur (&i), struct page, hash_elem);
+		
+		//do Something;
+		//init을 어떻게 할지 고민해야함.
+		vm_alloc_page_with_initializer(spt_page->operations->type, spt_page->va, spt_page->writable, spt_page->init, spt_page->aux);
+		if(spt_page->frame->kva != NULL){
+			vm_do_claim_page(spt_page); // 브리기태임 굿 ! 영화 무비 공부 스터디 (4조 이름)
+		}
+	}
 }
 
 /* Free the resource hold by the supplemental page table */

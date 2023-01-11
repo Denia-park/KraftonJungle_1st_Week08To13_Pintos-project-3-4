@@ -61,6 +61,8 @@ struct page {
 	bool active; // 활성화 체크
 	enum locate locate; // page 위치
 	bool writable;
+	vm_initializer * init;
+	void *aux;
 
 	/* Per-type data are binded into the union.
 	 * Each function automatically detects the current union */
