@@ -847,6 +847,7 @@ load_segment(struct file *file, off_t ofs, uint8_t *upage,
 			.page_zero_bytes = page_zero_bytes,
 		};
 
+		//원래 load_segment 에 있던 함수의 원형에서 VM_ANON 을 입력하도록 되어있음.
 		if (!vm_alloc_page_with_initializer(VM_ANON, upage,	writable, lazy_load_segment, aux)){
 			free(aux);
 			return false;
