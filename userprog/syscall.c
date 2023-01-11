@@ -90,7 +90,6 @@ syscall_handler (struct intr_frame *f) {
 	case SYS_EXEC:
 		check_address((void *) f->R.rdi);
 		f->R.rax = exec((const char *) f->R.rdi);
-		
 		break;
 
 	case SYS_CREATE:
