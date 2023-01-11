@@ -21,6 +21,8 @@
 #include "intrinsic.h"
 #include "threads/vaddr.h"
 #include "vm/vm.h"
+#include "lib/user/syscall.h"
+#include "threads/malloc.h"
 
 #ifdef VM
 #include "vm/vm.h"
@@ -39,7 +41,7 @@ static struct thread *get_child_with_id(tid_t child_tid);
 static void
 process_init(void)
 {
-	struct thread *current = thread_current();
+	// struct thread *current = thread_current();
 }
 
 /* Starts the first userland program, called "initd", loaded from FILE_NAME.
@@ -62,8 +64,8 @@ tid_t process_create_initd(const char *file_name)
 	char *argv[64] = {
 		NULL,
 	};
-	int argc;
-	argc = parse_file_name(argv, file_name);
+
+	parse_file_name(argv, file_name);
 
 	/* Create a new thread to execute FILE_NAME. */
 	tid = thread_create(argv[0], PRI_DEFAULT, initd, fn_copy);
@@ -204,8 +206,8 @@ __do_fork(void *aux)
 	struct file **parent_fdt = parent->fdt;
 	struct file **child_fdt = current->fdt;
 
-	child_fdt[0] = 1;
-	child_fdt[1] = 2;
+	child_fdt[0] = (struct file *) 1;
+	child_fdt[1] = (struct file *) 2;
 
 	for (int i = 2; i < FD_LIMIT_LEN; i++)
 	{
@@ -861,10 +863,12 @@ load_segment(struct file *file, off_t ofs, uint8_t *upage,
 
 //stack 초기화, 
 static bool
-init_stack(struct page *page, void *aux){
+init_stack(struct page *page UNUSED, void *aux){
 	struct intr_frame *if_ = aux;
 
 	if_->rsp = USER_STACK;
+
+	return true;
 }
 
 /* Create a PAGE of stack at the USER_STACK. Return true on success. */
