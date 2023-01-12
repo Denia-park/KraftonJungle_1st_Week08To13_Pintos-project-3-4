@@ -899,7 +899,11 @@ setup_stack(struct intr_frame *if_)
 	struct supplemental_page_table curr_spt = thread_current()->spt;
 
 	void *aux = if_;
-	success = vm_alloc_page_with_initializer(VM_ANON | VM_MARKER_STACK, stack_bottom, true, init_stack, aux);
+	success = vm_alloc_page_with_initializer(VM_ANON, stack_bottom, true, init_stack, aux);
+
+    if (success) {
+		vm_claim_page(stack_bottom); // 브리기태임 굿 ! 영화 무비 공부 스터디 (4조 이름)
+	}
 
 	struct page * curr_page = spt_find_page(&curr_spt, stack_bottom);
 	curr_page->aux_size = -1;

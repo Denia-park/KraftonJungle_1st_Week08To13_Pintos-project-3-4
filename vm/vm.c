@@ -92,12 +92,6 @@ bool vm_alloc_page_with_initializer (enum vm_type type, void *upage, bool writab
 			goto err;
 		}
 
-		if(type & VM_MARKER_STACK){
-			if (!vm_claim_page(upage)) {
-				goto err;
-			}
-		}
-
 		return true;
 	}
 err:
