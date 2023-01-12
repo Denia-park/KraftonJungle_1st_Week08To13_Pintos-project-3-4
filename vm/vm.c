@@ -83,8 +83,7 @@ bool vm_alloc_page_with_initializer (enum vm_type type, void *upage, bool writab
 
 		uninit_new(uninit, upage, init, type, aux, type_initializer);
 		uninit->writable = writable;
-		uninit->init = init;
-		uninit->aux = aux;
+		uninit->aux_size = 0;
 
 		  /* TODO: Insert the page into the spt. */
 		  /* TODO: 페이지를 SPT에 삽입합니다. */
@@ -313,19 +312,29 @@ bool supplemental_page_table_copy (struct supplemental_page_table *dst UNUSED,
 	//You will need to allocate uninit page and claim them immediately.
 
     //hash_table 순회
+	if(hash_empty(src_ht)) return true;
+	
 	struct hash_iterator i;
 	hash_first (&i, src_ht);
 	while (hash_next (&i)) {
 		struct page *spt_page = hash_entry (hash_cur (&i), struct page, hash_elem);
+		vm_initializer *copy_init;
+		int aux_size = sizeof(spt_page->aux_size);
+		void *copy_aux = malloc(aux_size);
 
-		// "안예인" 작성 - 23년 1월 12일 AM 12시 44분 -> 틀리면 모두 "안예인" 탓 (지분 PGSIZE)
-		// ★ 성공하면 우리 예인님 ^오^ ★ 꿈은 이루어 진다!! (지분 PGSIZE)
-		void * copy_aux = palloc_get_page(PAL_ZERO);
-		
-		memcpy(copy_aux, spt_page->aux, PGSIZE);
+		if(VM_TYPE (spt_page->operations->type) == VM_UNINIT){
+			copy_init = spt_page->uninit.init;
+			memcpy(copy_aux, spt_page->uninit.aux, aux_size);
+		}else if(VM_TYPE (spt_page->operations->type) == VM_ANON){
+			copy_init = spt_page->anon.init;
+			memcpy(copy_aux, spt_page->anon.aux, aux_size);
+		}else if(VM_TYPE (spt_page->operations->type) == VM_FILE){
+			copy_init = spt_page->file.init;
+			memcpy(copy_aux, spt_page->file.aux, aux_size);
+		}
 
 		// check: aux를 malloc을 해줘야 할까 ?
-		vm_alloc_page_with_initializer(spt_page->operations->type, spt_page->va, spt_page->writable, spt_page->init, spt_page->aux);
+		vm_alloc_page_with_initializer(spt_page->operations->type, spt_page->va, spt_page->writable, copy_init, copy_aux);
 		if(spt_page->frame->kva != NULL){
 			vm_do_claim_page(spt_page); // 브리기태임 굿 ! 영화 무비 공부 스터디 (4조 이름)
 		}

@@ -826,6 +826,8 @@ load_segment(struct file *file, off_t ofs, uint8_t *upage,
 	ASSERT(pg_ofs(upage) == 0);
 	ASSERT(ofs % PGSIZE == 0);
 
+	struct supplemental_page_table curr_spt = thread_current()->spt;
+
 	while (read_bytes > 0 || zero_bytes > 0)
 	{
 		/* Do calculate how to fill this page.
@@ -839,7 +841,8 @@ load_segment(struct file *file, off_t ofs, uint8_t *upage,
 
 		/* TODO: Set up aux to pass information to the lazy_load_segment. */
 		/* TODO: lazy_load_segment에 정보를 전달하도록 aux를 설정합니다. */
-		struct lazy_load_aux *aux = malloc(sizeof(struct lazy_load_aux));
+		int malloc_size = sizeof(struct lazy_load_aux);
+		struct lazy_load_aux *aux = malloc(malloc_size);
 		*aux = (struct lazy_load_aux) {
 			.file = file,
 			.ofs = ofs,
@@ -852,6 +855,9 @@ load_segment(struct file *file, off_t ofs, uint8_t *upage,
 			free(aux);
 			return false;
 		}
+
+		struct page * curr_page = spt_find_page(&curr_spt, upage);
+		curr_page->aux_size = malloc_size;
 
 		/* Advance. */
 		read_bytes -= page_read_bytes;
@@ -887,8 +893,13 @@ setup_stack(struct intr_frame *if_)
 	 * TODO: 성공하면 rsp를 적절하게 설정합니다.
 	 * TODO: 페이지를 스택으로 표시해야 합니다. */
 	/* TODO: Your code goes here */
+	struct supplemental_page_table curr_spt = thread_current()->spt;
+
 	void *aux = if_;
 	success = vm_alloc_page_with_initializer(VM_ANON | VM_MARKER_STACK, stack_bottom, true, init_stack, aux);
+
+	struct page * curr_page = spt_find_page(&curr_spt, stack_bottom);
+	curr_page->aux_size = -1;
 
 	return success;
 }
