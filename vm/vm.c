@@ -336,11 +336,12 @@ bool supplemental_page_table_copy (struct supplemental_page_table *dst UNUSED,
 		}
 
 		// check: aux를 malloc을 해줘야 할까 ?
-		if(spt_page->frame->kva != NULL){
 		if(!vm_alloc_page_with_initializer(curr_page_type, spt_page->va, spt_page->writable, copy_init, copy_aux)){			
 			free(copy_aux);
             return false;
         }
+
+		if(spt_page->frame != NULL && spt_page->frame->kva != NULL){
 			vm_do_claim_page(spt_page); // 브리기태임 굿 ! 영화 무비 공부 스터디 (4조 이름)
 		}
 	}
