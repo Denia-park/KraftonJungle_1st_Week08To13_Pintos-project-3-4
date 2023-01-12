@@ -314,7 +314,7 @@ bool supplemental_page_table_copy (struct supplemental_page_table *dst UNUSED,
 	while (hash_next (&i)) {
 		struct page *spt_page = hash_entry (hash_cur (&i), struct page, hash_elem);
 		vm_initializer *copy_init;
-		int aux_size = sizeof(spt_page->aux_size);
+		int aux_size = spt_page->aux_size;
 		void *copy_aux = malloc(aux_size);
 		enum vm_type curr_page_type = page_get_type(spt_page);
 
