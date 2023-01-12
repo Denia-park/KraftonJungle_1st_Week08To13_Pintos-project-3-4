@@ -50,4 +50,11 @@ anon_swap_out (struct page *page) {
 static void
 anon_destroy (struct page *page) {
 	struct anon_page *anon_page = &page->anon;
+
+	//1. struct frame
+	free(page->frame);
+	//2. aux 할당 받은거 free
+	free(anon_page->aux);
+
+	return;
 }
