@@ -347,7 +347,7 @@ void my_hash_action_func (struct hash_elem *e, void *aux){
 	if(page->frame->kva != NULL){
 		free(page->frame); // 브리
 		page->frame = NULL; //브리기태 좇밥 ㅋ -> 인간시대의 끝이 도래했다.
-		// free(page);
+		free(page);
 	}
 }
 
@@ -357,7 +357,7 @@ void supplemental_page_table_kill (struct supplemental_page_table *spt UNUSED)
 	/* TODO: Destroy all the supplemental_page_table hold by thread and
 	 * TODO: writeback all the modified contents to the storage. */
 
-	hash_destroy(spt->spt_hash_table, my_hash_action_func);
+	hash_clear(spt->spt_hash_table, my_hash_action_func);
 
 	//해제 목록 정리
 	//anon_destroy
