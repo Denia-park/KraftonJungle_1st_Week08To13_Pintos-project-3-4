@@ -345,6 +345,8 @@ bool supplemental_page_table_copy (struct supplemental_page_table *dst UNUSED,
 			vm_do_claim_page(spt_page); // 브리기태임 굿 ! 영화 무비 공부 스터디 (4조 이름)
 		}
 	}
+
+	return true;
 }
 
 void my_hash_action_func (struct hash_elem *e, void *aux){
