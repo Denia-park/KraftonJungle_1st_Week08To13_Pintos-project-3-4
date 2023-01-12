@@ -101,6 +101,7 @@ bool vm_alloc_page_with_initializer (enum vm_type type, void *upage, bool writab
 		return true;
 	}
 err:
+	free(uninit);
 	return false;
 }
 
