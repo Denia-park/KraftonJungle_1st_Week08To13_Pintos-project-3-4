@@ -333,6 +333,9 @@ void process_exit(void)
 	sema_up(&curr->wait_sema);
 	sema_down(&curr->free_sema);
 	process_cleanup();
+
+	free(curr->spt.spt_hash_table);
+	curr->spt.spt_hash_table = NULL;
 }
 
 /* Free the current process's resources. */
@@ -546,8 +549,9 @@ load(const char *file_name, struct intr_frame *if_)
 					zero_bytes = ROUND_UP(page_offset + phdr.p_memsz, PGSIZE);
 				}
 				if (!load_segment(file, file_page, (void *)mem_page,
-								  read_bytes, zero_bytes, writable))
+								  read_bytes, zero_bytes, writable)){
 					goto done;
+				}
 			}
 			else
 				goto done;
@@ -788,7 +792,6 @@ lazy_load_segment(struct page *page, void *aux)
 	}
 	memset(kpage + page_read_bytes, 0, lazy_load_aux->page_zero_bytes);
 
-	free(aux);
 	return true;
 }
 
