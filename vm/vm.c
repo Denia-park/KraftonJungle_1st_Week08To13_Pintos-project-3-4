@@ -322,20 +322,21 @@ bool supplemental_page_table_copy (struct supplemental_page_table *dst UNUSED,
 		vm_initializer *copy_init;
 		int aux_size = sizeof(spt_page->aux_size);
 		void *copy_aux = malloc(aux_size);
+		enum vm_type curr_page_type = page_get_type(spt_page);
 
-		if(VM_TYPE (spt_page->operations->type) == VM_UNINIT){
+		if(curr_page_type == VM_UNINIT){
 			copy_init = spt_page->uninit.init;
 			memcpy(copy_aux, spt_page->uninit.aux, aux_size);
-		}else if(VM_TYPE (spt_page->operations->type) == VM_ANON){
+		}else if(curr_page_type == VM_ANON){
 			copy_init = spt_page->anon.init;
 			memcpy(copy_aux, spt_page->anon.aux, aux_size);
-		}else if(VM_TYPE (spt_page->operations->type) == VM_FILE){
+		}else if(curr_page_type == VM_FILE){
 			copy_init = spt_page->file.init;
 			memcpy(copy_aux, spt_page->file.aux, aux_size);
 		}
 
 		// check: aux를 malloc을 해줘야 할까 ?
-		vm_alloc_page_with_initializer(spt_page->operations->type, spt_page->va, spt_page->writable, copy_init, copy_aux);
+		vm_alloc_page_with_initializer(curr_page_type, spt_page->va, spt_page->writable, copy_init, copy_aux);
 		if(spt_page->frame->kva != NULL){
 			vm_do_claim_page(spt_page); // 브리기태임 굿 ! 영화 무비 공부 스터디 (4조 이름)
 		}
