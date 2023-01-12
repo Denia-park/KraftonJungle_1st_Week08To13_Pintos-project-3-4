@@ -10,6 +10,7 @@
 
 #include "vm/vm.h"
 #include "vm/uninit.h"
+#include "threads/malloc.h"
 
 static bool uninit_initialize (struct page *page, void *kva);
 static void uninit_destroy (struct page *page);
@@ -43,10 +44,12 @@ uninit_new (struct page *page, void *va, vm_initializer *init,
 }
 
 /* Initalize the page on first fault */
+/* 첫 번째 폴트 시 페이지 초기화 */
 static bool
 uninit_initialize (struct page *page, void *kva) {
 	struct uninit_page *uninit = &page->uninit;
 
+	/* Fetch first, page_initialize may overwrite the values */
 	/* Fetch first, page_initialize may overwrite the values */
 	vm_initializer *init = uninit->init;
 	void *aux = uninit->aux;
@@ -65,4 +68,9 @@ uninit_destroy (struct page *page) {
 	struct uninit_page *uninit UNUSED = &page->uninit;
 	/* TODO: Fill this function.
 	 * TODO: If you don't have anything to do, just return. */
+    //할당 받지 못한 페이지가 삭제 될 수도 있음
+	if(page->aux_size != -1){
+		free(page->uninit.aux);
+	}
+	return;
 }

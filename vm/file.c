@@ -44,6 +44,13 @@ file_backed_swap_out (struct page *page) {
 static void
 file_backed_destroy (struct page *page) {
 	struct file_page *file_page UNUSED = &page->file;
+
+	//1. struct frame
+	free(page->frame);
+	//2. aux 할당 받은거 free
+	free(file_page->aux);
+
+	return;
 }
 
 /* Do the mmap */

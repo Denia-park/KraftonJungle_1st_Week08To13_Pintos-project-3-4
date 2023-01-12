@@ -13,6 +13,7 @@
 #include "threads/vaddr.h"
 #include "intrinsic.h"
 #include "filesys/file.h"
+#define USERPROG
 #ifdef USERPROG
 #include "userprog/process.h"
 #endif
@@ -221,7 +222,7 @@ tid_t thread_create(const char *name, int priority,
 	t->fdt = palloc_get_multiple(PAL_ZERO, 3); // ?
 	if (t->fdt == NULL)
 		return TID_ERROR;
-	//t->fdt = malloc(sizeof(struct file* ) * 128);
+	// t->fdt = malloc(sizeof(struct file* ) * 128);
 	t->fdt[0] = 1; // ? stdin
 	t->fdt[1] = 2; // ? stdout
 	t->next_fd = 2;
@@ -466,7 +467,6 @@ init_thread(struct thread *t, const char *name, int priority)
 	sema_init(&t->free_sema, 0);
 	t->parent = NULL;
 	list_init(&t->child_list);
-
 }
 
 /* Chooses and returns the next thread to be scheduled.  Should
