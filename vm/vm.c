@@ -336,7 +336,7 @@ bool supplemental_page_table_copy (struct supplemental_page_table *dst UNUSED,
         }
 
 		if(spt_page->frame != NULL && spt_page->frame->kva != NULL){
-			vm_do_claim_page(spt_page); // 브리기태임 굿 ! 영화 무비 공부 스터디 (4조 이름)
+			vm_claim_page(spt_page->va); // 브리기태임 굿 ! 영화 무비 공부 스터디 (4조 이름)
 		}
 	}
 
