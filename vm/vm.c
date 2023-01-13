@@ -305,6 +305,7 @@ bool supplemental_page_table_copy (struct supplemental_page_table *dst UNUSED,
 	struct hash *dst_ht = dst->spt_hash_table;
 
 	//You will need to allocate uninit page and claim them immediately.
+	void *stack_bottom = (void *)(((uint8_t *)USER_STACK) - PGSIZE);
 
     //hash_table 순회
 	if(hash_empty(src_ht)) return true;
@@ -315,27 +316,28 @@ bool supplemental_page_table_copy (struct supplemental_page_table *dst UNUSED,
 		struct page *spt_page = hash_entry (hash_cur (&i), struct page, hash_elem);
 		vm_initializer *copy_init;
 		int aux_size = spt_page->aux_size;
-		void *copy_aux = malloc(aux_size);
+		void *copy_aux = NULL;
 		enum vm_type curr_page_type = page_get_type(spt_page);
+		int copy_malloc_flag = 0;
 
-		if(curr_page_type == VM_UNINIT){
-			copy_init = spt_page->uninit.init;
+		copy_init = spt_page->uninit.init;
+
+		if(spt_page->va == stack_bottom){
+			copy_aux = spt_page->uninit.aux;
+		}else{
+			copy_aux = malloc(aux_size);
+			copy_malloc_flag = 1;
 			memcpy(copy_aux, spt_page->uninit.aux, aux_size);
-		}else if(curr_page_type == VM_ANON){
-			copy_init = spt_page->anon.init;
-			memcpy(copy_aux, spt_page->anon.aux, aux_size);
-		}else if(curr_page_type == VM_FILE){
-			copy_init = spt_page->file.init;
-			memcpy(copy_aux, spt_page->file.aux, aux_size);
 		}
 
 		// check: aux를 malloc을 해줘야 할까 ?
 		if(!vm_alloc_page_with_initializer(curr_page_type, spt_page->va, spt_page->writable, copy_init, copy_aux)){			
-			free(copy_aux);
+			if(copy_malloc_flag)
+				free(copy_aux);
             return false;
         }
 
-		if(spt_page->frame != NULL && spt_page->frame->kva != NULL){
+		if(spt_page->frame != NULL){
 			vm_claim_page(spt_page->va); // 브리기태임 굿 ! 영화 무비 공부 스터디 (4조 이름)
 		}
 	}
@@ -345,7 +347,7 @@ bool supplemental_page_table_copy (struct supplemental_page_table *dst UNUSED,
 
 void my_hash_action_func (struct hash_elem *e, void *aux){
     struct page *page = hash_entry (e, struct page, hash_elem);
-	if(page->frame->kva != NULL){
+	if(page->frame != NULL){
 		free(page->frame); // 브리
 		page->frame = NULL; //브리기태 좇밥 ㅋ -> 인간시대의 끝이 도래했다.
 		free(page);
