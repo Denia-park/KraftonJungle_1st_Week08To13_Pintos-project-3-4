@@ -338,12 +338,13 @@ bool supplemental_page_table_copy (struct supplemental_page_table *dst UNUSED,
 
 		if(spt_page->frame != NULL){
 			vm_claim_page(spt_page->va); // 브리기태임 굿 ! 영화 무비 공부 스터디 (4조 이름)
-		}
+			
+			struct page *dst_page = spt_find_page (dst, spt_page->va);
 
-		struct page *dst_page = spt_find_page (dst, spt_page->va);
-		if(dst_page != NULL && spt_page->frame != NULL){
-			dst_page->aux_size = aux_size;
-			memcpy(dst_page->frame->kva, spt_page->frame->kva, PGSIZE);
+			if(dst_page != NULL){
+				dst_page->aux_size = aux_size;
+				memcpy(dst_page->frame->kva, spt_page->frame->kva, PGSIZE);
+			}
 		}
 	}
 
