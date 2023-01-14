@@ -321,10 +321,9 @@ bool supplemental_page_table_copy (struct supplemental_page_table *dst UNUSED,
 		int copy_malloc_flag = 0;
 
 		copy_init = spt_page->uninit.init;
+		copy_aux = spt_page->uninit.aux;
 
-		if(spt_page->va == stack_bottom){
-			copy_aux = spt_page->uninit.aux;
-		}else{
+		if(aux_size != -1){
 			copy_aux = malloc(aux_size);
 			copy_malloc_flag = 1;
 			memcpy(copy_aux, spt_page->uninit.aux, aux_size);
@@ -342,10 +341,10 @@ bool supplemental_page_table_copy (struct supplemental_page_table *dst UNUSED,
 		}
 
 		struct page *dst_page = spt_find_page (dst, spt_page->va);
-		if(dst_page != NULL){
+		if(dst_page != NULL && spt_page->frame != NULL){
+			dst_page->aux_size = aux_size;
 			memcpy(dst_page->frame->kva, spt_page->frame->kva, PGSIZE);
 		}
-
 	}
 
 	return true;
