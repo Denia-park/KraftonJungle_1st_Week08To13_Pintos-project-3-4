@@ -194,6 +194,12 @@ init_frame(struct frame *frame, const void *addr){
 static void
 vm_stack_growth (void *addr UNUSED)
 {
+	void* va = pg_round_down(addr);
+	bool success = vm_alloc_page(VM_ANON, va, true);
+	if(success){
+		vm_claim_page(va);
+		thread_current()->round_rsp -= PGSIZE;
+	}
 }
 
 /* Handle the fault on write_protected page */
@@ -216,7 +222,13 @@ bool vm_try_handle_fault (struct intr_frame *f UNUSED, void *addr UNUSED,
 	// By valid, we mean the fault that accesses invalid.
 	// If it is a bogus fault, you load some contents into the page and
 	// return control to the user program.
-
+	if(USER_STACK_MIN_BOTTOM <= addr && addr <= USER_STACK){
+		uintptr_t round_rsp = thread_current()->round_rsp;
+		while(round_rsp / PGSIZE >= 1){
+			vm_stack_growth(addr);
+			round_rsp /= PGSIZE;
+		}
+	}
 
 	//적절한 PAGE를 찾아서 do_clam_page로 넘겨야 함.
 	page = spt_find_page(spt, addr);
@@ -323,7 +335,7 @@ bool supplemental_page_table_copy (struct supplemental_page_table *dst UNUSED,
 		copy_init = spt_page->uninit.init;
 		copy_aux = spt_page->uninit.aux;
 
-		if(aux_size != -1){
+		if(aux_size > 0){
 			copy_aux = malloc(aux_size);
 			copy_malloc_flag = 1;
 			memcpy(copy_aux, spt_page->uninit.aux, aux_size);
