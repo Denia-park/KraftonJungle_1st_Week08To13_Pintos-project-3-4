@@ -314,7 +314,7 @@ bool supplemental_page_table_copy (struct supplemental_page_table *dst UNUSED,
 	hash_first (&i, src_ht);
 	while (hash_next (&i)) {
 		struct page *spt_page = hash_entry (hash_cur (&i), struct page, hash_elem);
-		vm_initializer *copy_init;
+		vm_initializer *copy_init = NULL;
 		int aux_size = spt_page->aux_size;
 		void *copy_aux = NULL;
 		enum vm_type curr_page_type = page_get_type(spt_page);
@@ -340,6 +340,12 @@ bool supplemental_page_table_copy (struct supplemental_page_table *dst UNUSED,
 		if(spt_page->frame != NULL){
 			vm_claim_page(spt_page->va); // 브리기태임 굿 ! 영화 무비 공부 스터디 (4조 이름)
 		}
+
+		struct page *dst_page = spt_find_page (dst, spt_page->va);
+		if(dst_page != NULL){
+			memcpy(dst_page->frame->kva, spt_page->frame->kva, PGSIZE);
+		}
+
 	}
 
 	return true;
