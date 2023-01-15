@@ -223,9 +223,15 @@ bool vm_try_handle_fault (struct intr_frame *f UNUSED, void *addr UNUSED,
 	// return control to the user program.
 	if(USER_STACK_MIN_BOTTOM <= addr && addr <= USER_STACK){
 		uintptr_t round_rsp = thread_current()->round_rsp;
-		while(round_rsp / PGSIZE >= 1){
-			vm_stack_growth(addr);
-			round_rsp /= PGSIZE;
+
+		if(addr < round_rsp && write == true){
+			while(addr < round_rsp){
+				round_rsp -= PGSIZE;
+				vm_stack_growth(round_rsp);
+			}
+		}else{
+			//범위 밖의 데이터를 읽으려고 하기 때문에 exit(-1) 처리를 하자.
+			exit(-1);
 		}
 	}
 
