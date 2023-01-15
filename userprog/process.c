@@ -836,9 +836,6 @@ load_segment(struct file *file, off_t ofs, uint8_t *upage,
 		/* Do calculate how to fill this page.
 		 * We will read PAGE_READ_BYTES bytes from FILE
 		 * and zero the final PAGE_ZERO_BYTES bytes. */
-		/* 이 페이지를 채우는 방법을 계산하십시오.
-		 * 우리는 FILE에서 PAGE_READ_BYTES 바이트를 읽고
-		 * 마지막 PAGE_ZERO_BYTES바이트를 0으로 만들 것이다. */
 		size_t page_read_bytes = read_bytes < PGSIZE ? read_bytes : PGSIZE;
 		size_t page_zero_bytes = PGSIZE - page_read_bytes;
 
