@@ -194,10 +194,9 @@ init_frame(struct frame *frame, const void *addr){
 static void
 vm_stack_growth (void *addr UNUSED)
 {
-	void* va = pg_round_down(addr);
-	bool success = vm_alloc_page(VM_ANON, va, true);
+	bool success = vm_alloc_page(VM_ANON, addr, true);
 	if(success){
-		vm_claim_page(va);
+		vm_claim_page(addr);
 		thread_current()->round_rsp -= PGSIZE;
 	}
 }
