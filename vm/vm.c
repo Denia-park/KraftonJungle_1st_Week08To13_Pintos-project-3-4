@@ -194,10 +194,9 @@ init_frame(struct frame *frame, const void *addr){
 static void
 vm_stack_growth (void *addr UNUSED)
 {
-	void* va = pg_round_down(addr);
-	bool success = vm_alloc_page(VM_ANON, va, true);
+	bool success = vm_alloc_page(VM_ANON, addr, true);
 	if(success){
-		vm_claim_page(va);
+		vm_claim_page(addr);
 		thread_current()->round_rsp -= PGSIZE;
 	}
 }
@@ -223,14 +222,14 @@ bool vm_try_handle_fault (struct intr_frame *f UNUSED, void *addr UNUSED,
 	// If it is a bogus fault, you load some contents into the page and
 	// return control to the user program.
 	if(USER_STACK_MIN_BOTTOM <= addr && addr <= USER_STACK){
-		if (!write) {
+		if ((write == 0) || (user == 0)) {
 			exit(-1);
 		}
 
 		uintptr_t round_rsp = thread_current()->round_rsp;
-		while(round_rsp / PGSIZE >= 1){
-			vm_stack_growth(addr);
-			round_rsp /= PGSIZE;
+		while(addr < round_rsp){
+			round_rsp -= PGSIZE;
+			vm_stack_growth(round_rsp);
 		}
 	}
 
