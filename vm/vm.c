@@ -223,6 +223,10 @@ bool vm_try_handle_fault (struct intr_frame *f UNUSED, void *addr UNUSED,
 	// If it is a bogus fault, you load some contents into the page and
 	// return control to the user program.
 	if(USER_STACK_MIN_BOTTOM <= addr && addr <= USER_STACK){
+		if (!write) {
+			exit(-1);
+		}
+
 		uintptr_t round_rsp = thread_current()->round_rsp;
 		while(round_rsp / PGSIZE >= 1){
 			vm_stack_growth(addr);
