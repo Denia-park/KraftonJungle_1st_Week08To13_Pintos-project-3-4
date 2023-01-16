@@ -57,6 +57,13 @@ file_backed_destroy (struct page *page) {
 void *
 do_mmap (void *addr, size_t length, int writable,
 		struct file *file, off_t offset) {
+	/* TODO:
+		- 물리 프레임 할당 (do claim 어쩌고)
+		- 파일을 읽음 (file_read(file, ?, length)) , offset을 적용하기 위해 file_seek 사용
+		- frame->kva 에 직접 할당 or memcpy() 사용
+		- 만약 length < PGSIZE라면 memset()으로 나머지 바이트 수만큼 0으로 채우기
+	 */
+	
 }
 
 /* Do the munmap */
