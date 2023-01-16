@@ -467,6 +467,8 @@ init_thread(struct thread *t, const char *name, int priority)
 	sema_init(&t->free_sema, 0);
 	t->parent = NULL;
 	list_init(&t->child_list);
+	/* project 3 관련 초기화 */
+	t->round_rsp = USER_STACK - PGSIZE;
 }
 
 /* Chooses and returns the next thread to be scheduled.  Should
