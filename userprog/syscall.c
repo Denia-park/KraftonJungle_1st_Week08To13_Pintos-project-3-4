@@ -14,6 +14,7 @@
 #include "filesys/file.h"
 #include "threads/palloc.h"
 #include "devices/input.h"
+#include "vm/vm.h"
 
 typedef int pid_t;
 
@@ -36,6 +37,7 @@ static void seek (int fd, unsigned position);
 static unsigned tell (int fd);
 static bool is_invalid_fd(int fd);
 static void intr_frame_cpy(struct intr_frame *f);
+static void check_read_write(void *addr);
 
 /* System call.
  *
@@ -113,12 +115,14 @@ syscall_handler (struct intr_frame *f) {
 
 	case SYS_READ:
 		//check_address((void *) f->R.rdi);
+		check_read_write((void *) f->R.rsi);
 		check_address((void *) f->R.rsi);
 		f->R.rax = read(f->R.rdi, (void *) f->R.rsi, f->R.rdx);
 		break;
 
 	case SYS_WRITE:
 		//check_address((void *) f->R.rdi);
+		check_read_write((void *) f->R.rsi);
 		check_address((void *) f->R.rsi);
 		f->R.rax = write(f->R.rdi, (const void *) f->R.rsi, f->R.rdx);
 		break;
@@ -149,6 +153,13 @@ check_address(void *addr) {
 	//		- virtual memory와 매핑 안 된 영역
 	if (addr == NULL || is_kernel_vaddr(addr)) {
 		// 2. 유저 영역을 벗어난 영역일 경우 프로세스 종료((exit(-1)))
+		exit(-1);
+	}
+}
+
+static void check_read_write(void *addr){
+	struct page *check_page = spt_find_page(&thread_current()->spt, addr);
+	if(!check_page->writable){
 		exit(-1);
 	}
 }

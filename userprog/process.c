@@ -871,7 +871,8 @@ load_segment(struct file *file, off_t ofs, uint8_t *upage,
 	return true;
 }
 
-//stack 초기화, 
+// setup_stack에서 vm_alloc_page를 사용하면 이 함수를 사용할 필요가 없다.
+/* stack 초기화 */
 static bool
 init_stack(struct page *page UNUSED, void *aux){
 	struct intr_frame *if_ = aux;
@@ -900,9 +901,14 @@ setup_stack(struct intr_frame *if_)
 
 	void *aux = if_;
 	success = vm_alloc_page_with_initializer(VM_ANON, stack_bottom, true, init_stack, aux);
+	/* vm_alloc_page를 사용해서 init_stack과 aux를 사용하지 않아도된다.
+	 * 즉시 claim하기 때문이다.
+	 */
+	// success = vm_alloc_page(VM_ANON, stack_bottom, true);
 
     if (success) {
 		vm_claim_page(stack_bottom); // 브리기태임 굿 ! 영화 무비 공부 스터디 (4조 이름)
+		// if_->rsp = USER_STACK; // vm_alloc_page 사용시 추가
 	}
 
 	struct page * curr_page = spt_find_page(&curr_spt, stack_bottom);

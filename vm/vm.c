@@ -223,8 +223,7 @@ bool vm_try_handle_fault (struct intr_frame *f UNUSED, void *addr UNUSED,
 	// return control to the user program.
 	if(USER_STACK_MIN_BOTTOM <= addr && addr <= USER_STACK){
 		uintptr_t round_rsp = thread_current()->round_rsp;
-
-		if(addr < round_rsp && write == true){
+		if(addr < round_rsp && write == true && user){
 			while(addr < round_rsp){
 				round_rsp -= PGSIZE;
 				vm_stack_growth(round_rsp);
