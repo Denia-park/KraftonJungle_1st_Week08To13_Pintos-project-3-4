@@ -384,66 +384,69 @@ close (int fd) {// FIXME: next_fd 갱신 로직 최적화
 // 	}
 // }
 
-static size_t
-get_copy_length (size_t *length) {
-	size_t return_value = 0;
+// static size_t
+// get_copy_length (size_t *length) {
+// 	size_t return_value = 0;
 
-	if(*length >= PGSIZE) {
-		*length -= PGSIZE;
-		return_value = PGSIZE;
-	} else {
-		return_value = length;
-		*length = 0;
-	}
+// 	if(*length >= PGSIZE) {
+// 		*length -= PGSIZE;
+// 		return_value = PGSIZE;
+// 	} else {
+// 		return_value = length;
+// 		*length = 0;
+// 	}
 
-	return return_value;
-}
+// 	return return_value;
+// }
 
 static void *
 mmap (void *addr, size_t length, int writable, int fd, off_t offset) {
-	size_t temp_length = length;
-	size_t copy_length = get_copy_length(&temp_length);
-	void *copy_addr = addr;
-
-	while (copy_length)	{
-		if(is_invalid_mmap(addr, length, fd)){
-			return NULL;
-		}
-		/* fix: init인자 값 수정해야함 */
-		if(!vm_alloc_page_with_initializer(VM_FILE, addr, writable, NULL, NULL)){
-			return NULL;
-		}
-		copy_addr += PGSIZE;
-		copy_length = get_copy_length(&temp_length);
+	/* TODO:
+			- 인자들의 예외 처리
+			- 예외 처리를 통과하면 do_mmap함수를 호출한다
+			- file을 가져와서 do_mmap의 인자로 넘겨준다
+	 */
+	if(!is_invalid_mmap(addr, length, fd)){
+		return NULL;
 	}
+	struct file *file = thread_current()->fdt[fd];
+	if(file == NULL){ // file 유효성 검사
+		return NULL;
+	}
+
+	return do_mmap(addr, length, writable, file, offset);
 }
 
 static bool
 is_invalid_mmap(void *addr, size_t length, int fd){
 	/* TODO: 
-	 		- addr이 0인 경우
-			- fd로 연 파일이 0바이트인 경우
-	 		- addr이 페이지 정렬되어 있지 않은 경우(addr PGSIZE 연산 시 0이 아닐 경우)
-	 		- 이미 있는 페이지에 덮어씌울 경우
-	 		- length가 0인 경우
-	 		- fd가 stdin/stdout인 경우 */
+	 		- addr이 0인 경우 OK
+			- fd로 열린 파일이 0바이트인 경우 OK
+	 		- addr이 페이지 정렬되지 않은 경우 OK
+	 		- 이미 있는 페이지에 덮어씌울 경우 OK
+	 		- length가 0인 경우 OK
+	 		- fd가 stdin/stdout인 경우 OK
+	*/
 	if(addr == 0){
 		return false;
 	}
 	else if(filesize(fd) == 0){
-		return NULL;
+		return false;
 	}
-	else if(addr != pg_round_down(addr)){
-		return NULL;
+	else if(pg_ofs(addr) != 0){
+		return false;
 	}
 	else if(spt_find_page(&thread_current()->spt, addr)){
-		return NULL;
+		return false;
 	}
-	else if(length == 0){
-		return NULL;
+	else if(length <= 0){
+		return false;
 	}
 	else if(fd == 1 || fd == 0){
-		return NULL;
+		return false;
+	}
+	else{
+		return true;
 	}
 }
 
