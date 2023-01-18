@@ -37,6 +37,7 @@ static void seek (int fd, unsigned position);
 static unsigned tell (int fd);
 static void *mmap (void *addr, size_t length, int writable, int fd, off_t offset);
 static bool is_invalid_mmap(void *addr, size_t length, int fd);
+static void munmap(void *addr);
 static bool is_invalid_fd(int fd);
 static void intr_frame_cpy(struct intr_frame *f);
 static void check_read_write(void *addr);
@@ -448,6 +449,10 @@ is_invalid_mmap(void *addr, size_t length, int fd){
 	else{
 		return true;
 	}
+}
+
+static void munmap(void *addr){
+	do_munmap(addr);
 }
 
 static bool
